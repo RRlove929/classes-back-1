@@ -6,18 +6,21 @@ import com.roncoo.education.common.core.base.Page;
 import com.roncoo.education.common.core.base.PageUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.tools.BeanUtil;
+import com.roncoo.education.common.core.tools.JsonUtil;
 import com.roncoo.education.common.service.BaseBiz;
 import com.roncoo.education.course.dao.CourseDao;
 import com.roncoo.education.course.dao.UserCourseCommentDao;
 import com.roncoo.education.course.dao.impl.mapper.entity.Course;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseComment;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseCommentExample;
+import com.roncoo.education.course.fabric.FabricContract;
 import com.roncoo.education.course.service.auth.req.AuthUserCourseCommentPageReq;
 import com.roncoo.education.course.service.auth.req.AuthUserCourseCommentReq;
 import com.roncoo.education.course.service.auth.resp.AuthUserCourseCommentResp;
 import com.roncoo.education.course.service.biz.resp.CourseResp;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -38,6 +41,8 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
     @NotNull
     private final CourseDao courseDao;
 
+    private final FabricContract fabricContract;
+
     public Result<Page<AuthUserCourseCommentResp>> listForPage(AuthUserCourseCommentPageReq req) {
         UserCourseCommentExample example = new UserCourseCommentExample();
         example.createCriteria().andUserIdEqualTo(ThreadContext.userId());
@@ -54,10 +59,15 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
         return Result.success(resp);
     }
 
+    @Transactional
     public Result<String> add(AuthUserCourseCommentReq req) {
         UserCourseComment userCourseComment = BeanUtil.copyProperties(req, UserCourseComment.class);
         userCourseComment.setUserId(ThreadContext.userId());
         dao.save(userCourseComment);
+        String key = "comment:" + userCourseComment.getId();
+        String txHash = fabricContract.createBizRecord( key,
+                JsonUtil.toJsonString(userCourseComment));
+        log.info("评论上链：key[{}], txHash[{}]", key, txHash);
         return Result.success("评论成功");
     }
 

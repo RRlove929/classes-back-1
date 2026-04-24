@@ -20,6 +20,21 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Fabric Gateway SDK -->
+        <dependency>
+            <groupId>org.hyperledger.fabric</groupId>
+            <artifactId>fabric-gateway</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+
+        <!-- gRPC Netty Shaded -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.62.2</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>
