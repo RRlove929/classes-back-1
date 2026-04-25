@@ -55,6 +55,8 @@ public class CourseBiz extends BaseBiz {
     @NotNull
     private final UserCourseCollectDao userCourseCollectDao;
     @NotNull
+    private final UserCourseScoreDao userCourseScoreDao;
+    @NotNull
     private final ResourceDao resourceDao;
     @NotNull
     private final IFeignLecturer feignLecturer;
@@ -77,6 +79,15 @@ public class CourseBiz extends BaseBiz {
             return Result.error("该课程已被禁用");
         }
         CourseResp courseResp = BeanUtil.copyProperties(course, CourseResp.class);
+
+        // 课程评分统计（无论是否登录都返回，便于前端展示）
+        UserCourseScoreStat stat = userCourseScoreDao.statByCourseId(course.getId());
+        if (stat != null) {
+            courseResp.setScoreAvg(stat.getScoreAvg());
+            courseResp.setScoreCount(stat.getScoreCount());
+        } else {
+            courseResp.setScoreCount(0);
+        }
 
         Map<Long, BigDecimal> userStudyProgressMap = new HashMap<>();
         if (ObjectUtil.isNotEmpty(userId)) {
@@ -102,6 +113,12 @@ public class CourseBiz extends BaseBiz {
             UserCourseCollect userCourseCollect = userCourseCollectDao.getByCouserIdAndUserId(req.getCourseId(), userId);
             if (ObjectUtil.isNotEmpty(userCourseCollect)) {
                 courseResp.setCourseCollect(Boolean.TRUE);
+            }
+
+            // 我的评分（用于前端决定是否禁用评分控件）
+            UserCourseScore myScore = userCourseScoreDao.getByCourseIdAndUserId(req.getCourseId(), userId);
+            if (ObjectUtil.isNotEmpty(myScore)) {
+                courseResp.setMyScore(myScore.getScore());
             }
         }
         // 获取讲师信息

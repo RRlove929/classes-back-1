@@ -85,4 +85,13 @@ public class CourseResp implements Serializable {
     @ApiModelProperty(value = "课程收藏状态")
     private Boolean courseCollect = false;
 
+    @ApiModelProperty(value = "课程平均评分(1-5)")
+    private BigDecimal scoreAvg;
+
+    @ApiModelProperty(value = "课程评分人数")
+    private Integer scoreCount;
+
+    @ApiModelProperty(value = "我的评分(1-5)，未评分为空")
+    private Integer myScore;
+
 }

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roncoo.education.course.dao.impl.mapper.UserCourseScoreMapper">
+
+    <resultMap id="BaseResultMap" type="com.roncoo.education.course.dao.impl.mapper.entity.UserCourseScore">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="status_id" jdbcType="TINYINT" property="statusId"/>
+        <result column="sort" jdbcType="INTEGER" property="sort"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="course_id" jdbcType="BIGINT" property="courseId"/>
+        <result column="score" jdbcType="TINYINT" property="score"/>
+    </resultMap>
+
+    <resultMap id="StatResultMap" type="com.roncoo.education.course.dao.impl.mapper.entity.UserCourseScoreStat">
+        <result column="score_avg" jdbcType="DECIMAL" property="scoreAvg"/>
+        <result column="score_count" jdbcType="INTEGER" property="scoreCount"/>
+    </resultMap>
+
+    <insert id="insertSelective" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.UserCourseScore">
+        insert into user_course_score
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModified != null">
+                gmt_modified,
+            </if>
+            <if test="statusId != null">
+                status_id,
+            </if>
+            <if test="sort != null">
+                sort,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="courseId != null">
+                course_id,
+            </if>
+            <if test="score != null">
+                score,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModified != null">
+                #{gmtModified,jdbcType=TIMESTAMP},
+            </if>
+            <if test="statusId != null">
+                #{statusId,jdbcType=TINYINT},
+            </if>
+            <if test="sort != null">
+                #{sort,jdbcType=INTEGER},
+            </if>
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="courseId != null">
+                #{courseId,jdbcType=BIGINT},
+            </if>
+            <if test="score != null">
+                #{score,jdbcType=TINYINT},
+            </if>
+        </trim>
+    </insert>
+
+    <select id="selectByCourseIdAndUserId" resultMap="BaseResultMap">
+        select id, gmt_create, gmt_modified, status_id, sort, user_id, course_id, score
+        from user_course_score
+        where course_id = #{courseId,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+        limit 1
+    </select>
+
+    <select id="selectStatByCourseId" resultMap="StatResultMap">
+        select
+            round(avg(score), 1) as score_avg,
+            count(1) as score_count
+        from user_course_score
+        where course_id = #{courseId,jdbcType=BIGINT}
+    </select>
+
+</mapper>
+
