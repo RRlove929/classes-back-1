@@ -10,7 +10,9 @@ import com.roncoo.education.common.core.tools.JsonUtil;
 import com.roncoo.education.common.service.BaseBiz;
 import com.roncoo.education.course.dao.CourseDao;
 import com.roncoo.education.course.dao.UserCourseCommentDao;
+import com.roncoo.education.course.dao.UserCourseDao;
 import com.roncoo.education.course.dao.impl.mapper.entity.Course;
+import com.roncoo.education.course.dao.impl.mapper.entity.UserCourse;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseComment;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseCommentExample;
 import com.roncoo.education.course.fabric.FabricContract;
@@ -41,6 +43,10 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
     @NotNull
     private final CourseDao courseDao;
 
+    @NotNull
+    private final UserCourseDao userCourseDao;
+
+
     private final FabricContract fabricContract;
 
     public Result<Page<AuthUserCourseCommentResp>> listForPage(AuthUserCourseCommentPageReq req) {
@@ -61,13 +67,28 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
 
     @Transactional
     public Result<String> add(AuthUserCourseCommentReq req) {
+        Long userId = ThreadContext.userId();
+        Long courseId = req.getCourseId();
+
+        // ==============================================
+        // 【核心】判断用户是否购买了该课程
+        // ==============================================
+        UserCourse userCourse = userCourseDao.getByCourseIdAndUserId(courseId, userId);
+        if (userCourse == null) {
+            // 没买 → 直接不让评论
+            return Result.error("只有购买该课程的用户才能评论");
+        }
+
+        // 购买了 → 才允许保存评论
         UserCourseComment userCourseComment = BeanUtil.copyProperties(req, UserCourseComment.class);
-        userCourseComment.setUserId(ThreadContext.userId());
+        userCourseComment.setUserId(userId);
         dao.save(userCourseComment);
+
+        // 上链保存
         String key = "comment:" + userCourseComment.getId();
-        String txHash = fabricContract.createBizRecord( key,
-                JsonUtil.toJsonString(userCourseComment));
+        String txHash = fabricContract.createBizRecord(key, JsonUtil.toJsonString(userCourseComment));
         log.info("评论上链：key[{}], txHash[{}]", key, txHash);
+
         return Result.success("评论成功");
     }
 
