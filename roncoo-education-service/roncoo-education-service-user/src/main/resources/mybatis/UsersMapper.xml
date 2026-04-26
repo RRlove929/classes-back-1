@@ -12,6 +12,7 @@
     <result column="nickname" jdbcType="VARCHAR" property="nickname" />
     <result column="user_sex" jdbcType="TINYINT" property="userSex" />
     <result column="user_age" jdbcType="INTEGER" property="userAge" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
     <result column="user_head" jdbcType="VARCHAR" property="userHead" />
     <result column="remark" jdbcType="VARCHAR" property="remark" />
     <result column="union_id" jdbcType="VARCHAR" property="unionId" />
@@ -81,7 +82,7 @@
   </sql>
   <sql id="Base_Column_List">
     id, gmt_create, gmt_modified, status_id, mobile, mobile_salt, mobile_psw, nickname, 
-    user_sex, user_age, user_head, remark, union_id, open_id, city, province, country, 
+    user_sex, user_age, birthday, user_head, remark, union_id, open_id, city, province, country, 
     register_source
   </sql>
   <select id="selectByExample" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.UsersExample" resultMap="BaseResultMap">
@@ -121,14 +122,14 @@
     insert into users (id, gmt_create, gmt_modified, 
       status_id, mobile, mobile_salt, 
       mobile_psw, nickname, user_sex, 
-      user_age, user_head, remark, 
+      user_age, birthday, user_head, remark, 
       union_id, open_id, city, 
       province, country, register_source
       )
     values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP}, 
       #{statusId,jdbcType=TINYINT}, #{mobile,jdbcType=VARCHAR}, #{mobileSalt,jdbcType=VARCHAR}, 
       #{mobilePsw,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR}, #{userSex,jdbcType=TINYINT}, 
-      #{userAge,jdbcType=INTEGER}, #{userHead,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{userAge,jdbcType=INTEGER}, #{birthday,jdbcType=DATE}, #{userHead,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
       #{unionId,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, #{city,jdbcType=VARCHAR}, 
       #{province,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR}, #{registerSource,jdbcType=TINYINT}
       )
@@ -165,6 +166,9 @@
       </if>
       <if test="userAge != null">
         user_age,
+      </if>
+      <if test="birthday != null">
+        birthday,
       </if>
       <if test="userHead != null">
         user_head,
@@ -221,6 +225,9 @@
       </if>
       <if test="userAge != null">
         #{userAge,jdbcType=INTEGER},
+      </if>
+      <if test="birthday != null">
+        #{birthday,jdbcType=DATE},
       </if>
       <if test="userHead != null">
         #{userHead,jdbcType=VARCHAR},
@@ -287,6 +294,9 @@
       <if test="record.userAge != null">
         user_age = #{record.userAge,jdbcType=INTEGER},
       </if>
+      <if test="record.birthday != null">
+        birthday = #{record.birthday,jdbcType=DATE},
+      </if>
       <if test="record.userHead != null">
         user_head = #{record.userHead,jdbcType=VARCHAR},
       </if>
@@ -328,6 +338,7 @@
       nickname = #{record.nickname,jdbcType=VARCHAR},
       user_sex = #{record.userSex,jdbcType=TINYINT},
       user_age = #{record.userAge,jdbcType=INTEGER},
+      birthday = #{record.birthday,jdbcType=DATE},
       user_head = #{record.userHead,jdbcType=VARCHAR},
       remark = #{record.remark,jdbcType=VARCHAR},
       union_id = #{record.unionId,jdbcType=VARCHAR},
@@ -370,6 +381,9 @@
       <if test="userAge != null">
         user_age = #{userAge,jdbcType=INTEGER},
       </if>
+      <if test="birthday != null">
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
       <if test="userHead != null">
         user_head = #{userHead,jdbcType=VARCHAR},
       </if>
@@ -408,6 +422,7 @@
       nickname = #{nickname,jdbcType=VARCHAR},
       user_sex = #{userSex,jdbcType=TINYINT},
       user_age = #{userAge,jdbcType=INTEGER},
+      birthday = #{birthday,jdbcType=DATE},
       user_head = #{userHead,jdbcType=VARCHAR},
       remark = #{remark,jdbcType=VARCHAR},
       union_id = #{unionId,jdbcType=VARCHAR},

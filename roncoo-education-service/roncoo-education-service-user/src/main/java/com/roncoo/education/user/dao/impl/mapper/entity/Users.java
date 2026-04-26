@@ -1,6 +1,7 @@
 package com.roncoo.education.user.dao.impl.mapper.entity;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Users implements Serializable {
@@ -23,6 +24,11 @@ public class Users implements Serializable {
     private Integer userSex;
 
     private Integer userAge;
+
+    /**
+     * 生日
+     */
+    private LocalDate birthday;
 
     private String userHead;
 
@@ -122,6 +128,14 @@ public class Users implements Serializable {
         this.userAge = userAge;
     }
 
+    public LocalDate getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
     public String getUserHead() {
         return userHead;
     }
@@ -202,6 +216,7 @@ public class Users implements Serializable {
         sb.append(", nickname=").append(nickname);
         sb.append(", userSex=").append(userSex);
         sb.append(", userAge=").append(userAge);
+        sb.append(", birthday=").append(birthday);
         sb.append(", userHead=").append(userHead);
         sb.append(", remark=").append(remark);
         sb.append(", unionId=").append(unionId);

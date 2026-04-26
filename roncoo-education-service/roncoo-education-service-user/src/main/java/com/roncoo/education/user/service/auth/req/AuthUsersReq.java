@@ -1,5 +1,6 @@
 package com.roncoo.education.user.service.auth.req;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.experimental.Accessors;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 /**
  * <p>
@@ -35,6 +37,10 @@ public class AuthUsersReq implements Serializable {
     @NotNull(message = "请填写年龄")
     @ApiModelProperty(value = "用户年龄")
     private Integer userAge;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty(value = "生日")
+    private LocalDate birthday;
 
     @ApiModelProperty(value = "用户头像")
     private String userHead;

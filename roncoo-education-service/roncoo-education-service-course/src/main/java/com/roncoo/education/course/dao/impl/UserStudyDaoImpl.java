@@ -92,7 +92,18 @@ public class UserStudyDaoImpl extends AbstractBaseJdbc implements UserStudyDao {
 
     @Override
     public List<UserStudy> listByUserIdAndCourseIdsForMax(Long userId, List<Long> courseIdList) {
-        String sql = "select max(gmt_modified) as gmt_modified, course_id, chapter_id, period_id, progress from user_study where user_id=:USERID and course_id in (:COURSEIDS) GROUP BY course_id";
+        // 兼容 MySQL only_full_group_by：取每个 course 最新一条学习记录
+        // 若同一 course 存在相同 gmt_modified 的并列记录，会返回多条（业务可接受：用于“继续学习”推荐）
+        String sql =
+                "select s.* " +
+                "from user_study s " +
+                "join ( " +
+                "  select course_id, max(gmt_modified) as gmt_modified " +
+                "  from user_study " +
+                "  where user_id=:USERID and course_id in (:COURSEIDS) " +
+                "  group by course_id " +
+                ") m on m.course_id=s.course_id and m.gmt_modified=s.gmt_modified " +
+                "where s.user_id=:USERID and s.course_id in (:COURSEIDS)";
         Map<String, Object> map = new HashMap();
         map.put("USERID", userId);
         map.put("COURSEIDS", courseIdList);

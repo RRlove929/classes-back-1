@@ -83,6 +83,10 @@ public class AdminGlobalFilter implements GlobalFilter, Ordered {
             // 链上评价查询接口：允许管理端页面直接访问（避免菜单权限未配置导致306）
             return chain.filter(exchange);
         }
+        if (uri.contains("/dashboard/rating/")) {
+            // 评价看板接口：先放行，后续可改为菜单权限控制
+            return chain.filter(exchange);
+        }
         // 额外不需要token认证的接口
         if (EXCLUDE_TOKEN_URL.contains(uri)) {
             return chain.filter(exchange);
