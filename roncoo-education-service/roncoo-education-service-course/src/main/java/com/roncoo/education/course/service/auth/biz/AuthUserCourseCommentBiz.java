@@ -1,6 +1,7 @@
 package com.roncoo.education.course.service.auth.biz;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.roncoo.education.common.config.ThreadContext;
 import com.roncoo.education.common.core.base.Page;
 import com.roncoo.education.common.core.base.PageUtil;
@@ -8,9 +9,11 @@ import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.tools.BeanUtil;
 import com.roncoo.education.common.core.tools.JsonUtil;
 import com.roncoo.education.common.service.BaseBiz;
+import com.roncoo.education.course.dao.ChainCommentDao;
 import com.roncoo.education.course.dao.CourseDao;
 import com.roncoo.education.course.dao.UserCourseCommentDao;
 import com.roncoo.education.course.dao.UserCourseDao;
+import com.roncoo.education.course.dao.impl.mapper.entity.ChainComment;
 import com.roncoo.education.course.dao.impl.mapper.entity.Course;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourse;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseComment;
@@ -21,6 +24,7 @@ import com.roncoo.education.course.service.auth.req.AuthUserCourseCommentReq;
 import com.roncoo.education.course.service.auth.resp.AuthUserCourseCommentResp;
 import com.roncoo.education.course.service.biz.resp.CourseResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +50,8 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
     @NotNull
     private final UserCourseDao userCourseDao;
 
+    @NotNull
+    private final ChainCommentDao chainCommentDao;
 
     private final FabricContract fabricContract;
 
@@ -88,6 +94,25 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
         String key = "comment:" + userCourseComment.getId();
         String txHash = fabricContract.createBizRecord(key, JsonUtil.toJsonString(userCourseComment));
         log.info("评论上链：key[{}], txHash[{}]", key, txHash);
+
+        // 同步写入“链上评价明细表”（评论本身不参与评分聚合，score=0）
+        ChainComment cc = new ChainComment();
+        cc.setChainId(0L);
+        cc.setContractAddress("");
+        cc.setContentType("course");
+        cc.setContentId(courseId);
+        cc.setUserAddress("uid:" + userId);
+        cc.setScore(0);
+        cc.setCommentUri("");
+        cc.setCommentHash(DigestUtil.sha256Hex(userCourseComment.getCommentText()));
+        cc.setTxHash(txHash);
+        cc.setBlockNumber(0L);
+        cc.setLogIndex(0);
+        cc.setEventTime(0L);
+        try {
+            chainCommentDao.save(cc);
+        } catch (DuplicateKeyException ignore) {
+        }
 
         return Result.success("评论成功");
     }

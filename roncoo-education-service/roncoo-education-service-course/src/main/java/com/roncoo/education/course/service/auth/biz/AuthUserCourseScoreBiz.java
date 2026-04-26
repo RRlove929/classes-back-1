@@ -6,13 +6,17 @@ import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.tools.BeanUtil;
 import com.roncoo.education.common.core.tools.JsonUtil;
 import com.roncoo.education.common.service.BaseBiz;
+import com.roncoo.education.course.dao.ChainCommentDao;
+import com.roncoo.education.course.dao.ContentRatingAggDao;
 import com.roncoo.education.course.dao.UserCourseDao;
 import com.roncoo.education.course.dao.UserCourseScoreDao;
+import com.roncoo.education.course.dao.impl.mapper.entity.ChainComment;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourse;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseScore;
 import com.roncoo.education.course.fabric.FabricContract;
 import com.roncoo.education.course.service.auth.req.AuthUserCourseScoreReq;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,12 @@ public class AuthUserCourseScoreBiz extends BaseBiz {
 
     @NotNull
     private final UserCourseDao userCourseDao;
+
+    @NotNull
+    private final ChainCommentDao chainCommentDao;
+
+    @NotNull
+    private final ContentRatingAggDao contentRatingAggDao;
 
     private final FabricContract fabricContract;
 
@@ -61,6 +71,29 @@ public class AuthUserCourseScoreBiz extends BaseBiz {
         String key = "score:" + score.getId();
         String txHash = fabricContract.createBizRecord(key, JsonUtil.toJsonString(score));
         log.info("评分上链：key[{}], txHash[{}]", key, txHash);
+
+        // 同步写入“链上评价明细表”与“聚合表”（让系统无需额外索引器也能完整跑起来）
+        ChainComment cc = new ChainComment();
+        cc.setChainId(0L); // Fabric链：此处不依赖真实区块高度
+        cc.setContractAddress("");
+        cc.setContentType("course");
+        cc.setContentId(courseId);
+        cc.setUserAddress("uid:" + userId);
+        cc.setScore(score.getScore());
+        cc.setCommentUri("");
+        cc.setCommentHash("");
+        cc.setTxHash(txHash);
+        cc.setBlockNumber(0L);
+        cc.setLogIndex(0);
+        cc.setEventTime(0L);
+        try {
+            chainCommentDao.save(cc);
+        } catch (DuplicateKeyException ignore) {
+            // 重复写入则忽略
+        }
+        if (cc.getScore() != null && cc.getScore() >= 1 && cc.getScore() <= 5) {
+            contentRatingAggDao.incrByScore(cc.getContentType(), cc.getContentId(), cc.getScore(), cc.getBlockNumber());
+        }
 
         return Result.success("评分成功");
     }

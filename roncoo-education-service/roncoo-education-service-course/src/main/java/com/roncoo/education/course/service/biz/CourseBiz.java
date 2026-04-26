@@ -57,6 +57,8 @@ public class CourseBiz extends BaseBiz {
     @NotNull
     private final UserCourseScoreDao userCourseScoreDao;
     @NotNull
+    private final ContentRatingAggDao contentRatingAggDao;
+    @NotNull
     private final ResourceDao resourceDao;
     @NotNull
     private final IFeignLecturer feignLecturer;
@@ -81,12 +83,19 @@ public class CourseBiz extends BaseBiz {
         CourseResp courseResp = BeanUtil.copyProperties(course, CourseResp.class);
 
         // 课程评分统计（无论是否登录都返回，便于前端展示）
-        UserCourseScoreStat stat = userCourseScoreDao.statByCourseId(course.getId());
-        if (stat != null) {
-            courseResp.setScoreAvg(stat.getScoreAvg());
-            courseResp.setScoreCount(stat.getScoreCount());
+        // 优先取“链上聚合表”的综合评分；无数据时回退到原有 user_course_score 统计
+        ContentRatingAggStat aggStat = contentRatingAggDao.statByContentId("course", course.getId());
+        if (aggStat != null && aggStat.getScoreCount() != null && aggStat.getScoreCount() > 0) {
+            courseResp.setScoreAvg(aggStat.getScoreAvg());
+            courseResp.setScoreCount(aggStat.getScoreCount());
         } else {
-            courseResp.setScoreCount(0);
+            UserCourseScoreStat stat = userCourseScoreDao.statByCourseId(course.getId());
+            if (stat != null) {
+                courseResp.setScoreAvg(stat.getScoreAvg());
+                courseResp.setScoreCount(stat.getScoreCount());
+            } else {
+                courseResp.setScoreCount(0);
+            }
         }
 
         Map<Long, BigDecimal> userStudyProgressMap = new HashMap<>();

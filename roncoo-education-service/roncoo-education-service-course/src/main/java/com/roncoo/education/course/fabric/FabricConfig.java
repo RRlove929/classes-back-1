@@ -32,7 +32,9 @@ import java.util.stream.Stream;
 @Configuration
 public class FabricConfig {
     private static final HashMap<String, Contract> contractMap = new HashMap<>();
+    private static final HashMap<String, Network> networkMap = new HashMap<>();
     private static String DEFAULT_CLIENT;
+    private static String CHANNEL_NAME;
 
     public static Contract getDefalutContract() {
         return contractMap.get(DEFAULT_CLIENT);
@@ -42,12 +44,21 @@ public class FabricConfig {
         return contractMap.get(mspId);
     }
 
+    public static Network getDefaultNetwork() {
+        return networkMap.get(DEFAULT_CLIENT);
+    }
+
+    public static String getChannelName() {
+        return CHANNEL_NAME;
+    }
+
     private final FabricProperties fabricProperties;
 
     @PostConstruct
     public void init() throws IOException, CertificateException, InvalidKeyException {
         log.info("FabricConfig init");
         DEFAULT_CLIENT = fabricProperties.getDefaultClient();
+        CHANNEL_NAME = fabricProperties.getChannelName();
         for (FabricProperties.FabricClientConf client : fabricProperties.getClients()) {
             log.info("FabricConfig client init : {}", client);
             Path cryptoPath = Paths.get(client.getCryptoPath());
@@ -72,6 +83,7 @@ public class FabricConfig {
             // Get the smart contract from the network.
             Contract contract = network.getContract(fabricProperties.getChaincodeName());
             contractMap.put(client.getMspId(), contract);
+            networkMap.put(client.getMspId(), network);
         }
         log.info("FabricConfig init success");
     }
