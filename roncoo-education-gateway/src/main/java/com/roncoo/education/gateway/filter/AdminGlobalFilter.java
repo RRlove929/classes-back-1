@@ -39,7 +39,11 @@ public class AdminGlobalFilter implements GlobalFilter, Ordered {
      * admin不需要权限校验的接口
      */
     private static final List<String> EXCLUDE_URL = Arrays.asList(
-            "/system/admin/sys/user/current"
+            "/system/admin/sys/user/current",
+            "/course/api/chain-comment/agg",
+            "/course/api/chain-comment/page",
+            "/api/course/api/chain-comment/agg",
+            "/api/course/api/chain-comment/page"
     );
 
     @Resource
@@ -75,6 +79,10 @@ public class AdminGlobalFilter implements GlobalFilter, Ordered {
             // 路径存在关键词：/images
             return chain.filter(exchange);
         }
+        if (uri.contains("/chain-comment/") || uri.contains("/chain/comment/")) {
+            // 链上评价查询接口：允许管理端页面直接访问（避免菜单权限未配置导致306）
+            return chain.filter(exchange);
+        }
         // 额外不需要token认证的接口
         if (EXCLUDE_TOKEN_URL.contains(uri)) {
             return chain.filter(exchange);
@@ -103,6 +111,10 @@ public class AdminGlobalFilter implements GlobalFilter, Ordered {
     private static Boolean checkUri(String uri, String tk) {
         if (StringUtils.hasText(uri) && uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
+        }
+        // 链上评价公开查询：管理端页面会直接调用这两个API
+        if (uri.startsWith("/course/api/chain-comment/") || uri.startsWith("/api/course/api/chain-comment/")) {
+            return true;
         }
         // 额外不需要权限校验的接口
         if (EXCLUDE_URL.contains(uri)) {

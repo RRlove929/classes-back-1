@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roncoo.education.course.dao.impl.mapper.ChainCommentMapper">
+
+    <resultMap id="BaseResultMap" type="com.roncoo.education.course.dao.impl.mapper.entity.ChainComment">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modified" jdbcType="TIMESTAMP" property="gmtModified"/>
+        <result column="chain_id" jdbcType="BIGINT" property="chainId"/>
+        <result column="contract_address" jdbcType="VARCHAR" property="contractAddress"/>
+        <result column="content_type" jdbcType="VARCHAR" property="contentType"/>
+        <result column="content_id" jdbcType="BIGINT" property="contentId"/>
+        <result column="user_address" jdbcType="VARCHAR" property="userAddress"/>
+        <result column="score" jdbcType="TINYINT" property="score"/>
+        <result column="comment_uri" jdbcType="VARCHAR" property="commentUri"/>
+        <result column="comment_hash" jdbcType="VARCHAR" property="commentHash"/>
+        <result column="tx_hash" jdbcType="VARCHAR" property="txHash"/>
+        <result column="block_number" jdbcType="BIGINT" property="blockNumber"/>
+        <result column="log_index" jdbcType="INTEGER" property="logIndex"/>
+        <result column="event_time" jdbcType="BIGINT" property="eventTime"/>
+    </resultMap>
+
+    <insert id="insertSelective" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.ChainComment">
+        insert into chain_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="gmtCreate != null">gmt_create,</if>
+            <if test="gmtModified != null">gmt_modified,</if>
+            <if test="chainId != null">chain_id,</if>
+            <if test="contractAddress != null">contract_address,</if>
+            <if test="contentType != null">content_type,</if>
+            <if test="contentId != null">content_id,</if>
+            <if test="userAddress != null">user_address,</if>
+            <if test="score != null">score,</if>
+            <if test="commentUri != null">comment_uri,</if>
+            <if test="commentHash != null">comment_hash,</if>
+            <if test="txHash != null">tx_hash,</if>
+            <if test="blockNumber != null">block_number,</if>
+            <if test="logIndex != null">log_index,</if>
+            <if test="eventTime != null">event_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id,jdbcType=BIGINT},</if>
+            <if test="gmtCreate != null">#{gmtCreate,jdbcType=TIMESTAMP},</if>
+            <if test="gmtModified != null">#{gmtModified,jdbcType=TIMESTAMP},</if>
+            <if test="chainId != null">#{chainId,jdbcType=BIGINT},</if>
+            <if test="contractAddress != null">#{contractAddress,jdbcType=VARCHAR},</if>
+            <if test="contentType != null">#{contentType,jdbcType=VARCHAR},</if>
+            <if test="contentId != null">#{contentId,jdbcType=BIGINT},</if>
+            <if test="userAddress != null">#{userAddress,jdbcType=VARCHAR},</if>
+            <if test="score != null">#{score,jdbcType=TINYINT},</if>
+            <if test="commentUri != null">#{commentUri,jdbcType=VARCHAR},</if>
+            <if test="commentHash != null">#{commentHash,jdbcType=VARCHAR},</if>
+            <if test="txHash != null">#{txHash,jdbcType=VARCHAR},</if>
+            <if test="blockNumber != null">#{blockNumber,jdbcType=BIGINT},</if>
+            <if test="logIndex != null">#{logIndex,jdbcType=INTEGER},</if>
+            <if test="eventTime != null">#{eventTime,jdbcType=BIGINT},</if>
+        </trim>
+    </insert>
+
+    <select id="selectByContentIdForPage" resultMap="BaseResultMap">
+        select
+            id, gmt_create, gmt_modified, chain_id, contract_address, content_type, content_id,
+            user_address, score, comment_uri, comment_hash, tx_hash, block_number, log_index, event_time
+        from chain_comment
+        where content_type = #{contentType,jdbcType=VARCHAR}
+          and content_id = #{contentId,jdbcType=BIGINT}
+        order by block_number desc, log_index desc, id desc
+        limit #{offset,jdbcType=BIGINT}, #{pageSize,jdbcType=INTEGER}
+    </select>
+
+    <select id="countByContentId" resultType="java.lang.Integer">
+        select count(1)
+        from chain_comment
+        where content_type = #{contentType,jdbcType=VARCHAR}
+          and content_id = #{contentId,jdbcType=BIGINT}
+    </select>
+
+    <select id="selectPendingMeta" resultMap="BaseResultMap">
+        select
+            id, gmt_create, gmt_modified, chain_id, contract_address, content_type, content_id,
+            user_address, score, comment_uri, comment_hash, tx_hash, block_number, log_index, event_time
+        from chain_comment
+        where block_number = 0
+          and tx_hash is not null
+          and tx_hash != ''
+        order by id asc
+        limit #{limit,jdbcType=INTEGER}
+    </select>
+
+    <update id="updateChainMetaById">
+        update chain_comment
+        set chain_id = #{chainId,jdbcType=BIGINT},
+            block_number = #{blockNumber,jdbcType=BIGINT},
+            log_index = #{logIndex,jdbcType=INTEGER}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+</mapper>
+

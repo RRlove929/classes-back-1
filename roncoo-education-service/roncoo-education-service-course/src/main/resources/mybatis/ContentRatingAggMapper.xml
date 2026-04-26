@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.roncoo.education.course.dao.impl.mapper.ContentRatingAggMapper">
+
+    <resultMap id="StatResultMap" type="com.roncoo.education.course.dao.impl.mapper.entity.ContentRatingAggStat">
+        <result column="score_avg" jdbcType="DECIMAL" property="scoreAvg"/>
+        <result column="score_count" jdbcType="INTEGER" property="scoreCount"/>
+        <result column="score_1_count" jdbcType="INTEGER" property="score1Count"/>
+        <result column="score_2_count" jdbcType="INTEGER" property="score2Count"/>
+        <result column="score_3_count" jdbcType="INTEGER" property="score3Count"/>
+        <result column="score_4_count" jdbcType="INTEGER" property="score4Count"/>
+        <result column="score_5_count" jdbcType="INTEGER" property="score5Count"/>
+        <result column="last_block_number" jdbcType="BIGINT" property="lastBlockNumber"/>
+    </resultMap>
+
+    <select id="selectStatByContentId" resultMap="StatResultMap">
+        select
+            case when score_count &gt; 0 then round(score_sum / score_count, 1) else null end as score_avg,
+            score_count,
+            score_1_count,
+            score_2_count,
+            score_3_count,
+            score_4_count,
+            score_5_count,
+            last_block_number
+        from content_rating_agg
+        where content_type = #{contentType,jdbcType=VARCHAR}
+          and content_id = #{contentId,jdbcType=BIGINT}
+        limit 1
+    </select>
+
+    <insert id="upsertIncrByScore">
+        insert into content_rating_agg
+        (id, content_type, content_id, score_count, score_sum, score_1_count, score_2_count, score_3_count, score_4_count, score_5_count, last_block_number)
+        values
+        (
+          #{id,jdbcType=BIGINT},
+          #{contentType,jdbcType=VARCHAR},
+          #{contentId,jdbcType=BIGINT},
+          <choose>
+              <when test="score != null and score &gt;= 1 and score &lt;= 5">1</when>
+              <otherwise>0</otherwise>
+          </choose>,
+          <choose>
+              <when test="score != null and score &gt;= 1 and score &lt;= 5">#{score,jdbcType=INTEGER}</when>
+              <otherwise>0</otherwise>
+          </choose>,
+          <choose><when test="score == 1">1</when><otherwise>0</otherwise></choose>,
+          <choose><when test="score == 2">1</when><otherwise>0</otherwise></choose>,
+          <choose><when test="score == 3">1</when><otherwise>0</otherwise></choose>,
+          <choose><when test="score == 4">1</when><otherwise>0</otherwise></choose>,
+          <choose><when test="score == 5">1</when><otherwise>0</otherwise></choose>,
+          #{lastBlockNumber,jdbcType=BIGINT}
+        )
+        on duplicate key update
+          score_count = score_count + values(score_count),
+          score_sum = score_sum + values(score_sum),
+          score_1_count = score_1_count + values(score_1_count),
+          score_2_count = score_2_count + values(score_2_count),
+          score_3_count = score_3_count + values(score_3_count),
+          score_4_count = score_4_count + values(score_4_count),
+          score_5_count = score_5_count + values(score_5_count),
+          last_block_number = greatest(last_block_number, values(last_block_number))
+    </insert>
+
+</mapper>
+
